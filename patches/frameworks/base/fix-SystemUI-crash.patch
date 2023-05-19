@@ -1,0 +1,53 @@
+From 57167bc4226da966b6d7f80616cac778d0462c65 Mon Sep 17 00:00:00 2001
+From: kxxt <rsworktech@outlook.com>
+Date: Wed, 17 May 2023 22:31:06 +0800
+Subject: [PATCH] SystemUI: check null in StatusBarIconController
+
+When switching user profiles, the context argument passed to
+getIconHideList is null, causing a NullPointerException.
+
+Relevant error logs from my lineageOS phone:
+E AndroidRuntime: FATAL EXCEPTION: main
+E AndroidRuntime: Process: com.android.systemui, PID: 2829
+E AndroidRuntime: java.lang.NullPointerException: Attempt to invoke virtual method 'android.content.res.Resources android.content.Context.getResources()' on a null object reference
+E AndroidRuntime:    at com.android.systemui.statusbar.phone.StatusBarIconController.getIconHideList(StatusBarIconController.java:7)
+E AndroidRuntime:    at com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment.onTuningChanged(CollapsedStatusBarFragment.java:6)
+E AndroidRuntime:    at com.android.systemui.tuner.TunerServiceImpl$1.onUserChanged(TunerServiceImpl.java:54)
+E AndroidRuntime:    at com.android.systemui.settings.UserTrackerImpl$handleSwitchUser$$inlined$notifySubscribers$1.run(UserTrackerImpl.kt:16)
+E AndroidRuntime:    at android.os.Handler.handleCallback(Handler.java:942)
+E AndroidRuntime:    at android.os.Handler.dispatchMessage(Handler.java:99)
+E AndroidRuntime:    at android.os.Looper.loopOnce(Looper.java:201)
+E AndroidRuntime:    at android.os.Looper.loop(Looper.java:288)
+E AndroidRuntime:    at android.app.ActivityThread.main(ActivityThread.java:7884)
+E AndroidRuntime:    at java.lang.reflect.Method.invoke(Native Method)
+E AndroidRuntime:    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:548)
+E AndroidRuntime:    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+
+Test: I tested the patch on emulator with Lineage OS and ported it here.
+Change-Id: I8eb8a16dae1adfb9cf8b234b6ad395eaeaa420b2
+---
+
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarIconController.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarIconController.java
+index 24ad55d..b759738 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarIconController.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarIconController.java
+@@ -168,9 +168,16 @@
+     /** Reads the default hide list from config value unless hideListStr is provided. */
+     static ArraySet<String> getIconHideList(Context context, String hideListStr) {
+         ArraySet<String> ret = new ArraySet<>();
+-        String[] hideList = hideListStr == null
+-                ? context.getResources().getStringArray(R.array.config_statusBarIconsToExclude)
+-                : hideListStr.split(",");
++        String[] hideList = null;
++        if (hideListStr == null) {
++            if (context == null) {
++                return ret;
++            }
++            hideList = context.getResources()
++                              .getStringArray(R.array.config_statusBarIconsToExclude);
++        } else {
++            hideList = hideListStr.split(",");
++        }
+         for (String slot : hideList) {
+             if (!TextUtils.isEmpty(slot)) {
+                 ret.add(slot);
