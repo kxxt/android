@@ -4,6 +4,7 @@ user=10
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
+IFS=$'\n'
 packages=( $( <$SCRIPT_DIR/copy.list ) )
 
 for line in "${packages[@]}"
