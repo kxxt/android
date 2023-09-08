@@ -7,6 +7,10 @@ patch-kernel:
 	@echo "Patching kernel..."
 	patch -Np1 -i $(realpath kernel-patches/termux-kernel-docker.patch) -d $(ANDROID_BUILD_TOP)/kernel/$(ANDROID_VENDOR)/$(KERNEL_DIR)
 
+allow-sysvipc:
+	@echo "Allow SYSVIPC"
+	patch -Np1 -i $(realpath optional-patches/allow-sysvipc.patch) -d $(ANDROID_BUILD_TOP)/kernel/configs
+
 enable-docker:
 	@echo "Enabling docker..."
 	patch -Np1 -i $(realpath optional-patches/docker/$(ANDROID_VENDOR)-$(LINEAGE_BUILD).patch) -d $(ANDROID_BUILD_TOP)/kernel/$(ANDROID_VENDOR)/$(KERNEL_DIR)
