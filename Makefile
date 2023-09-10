@@ -1,7 +1,8 @@
-.PHONY: all patch-kernel enable-docker allow-sysvipc default
+.PHONY: all patch-kernel enable-docker allow-sysvipc default revert
 
-default:
-	@echo "Nothing to do"
+# Usage: make ANDROID_VENDOR=... KERNEL_DIR=...
+
+default: revert patch-kernel allow-sysvipc enable-docker
 
 patch-kernel:
 	@echo "Patching kernel..."
