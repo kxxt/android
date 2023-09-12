@@ -1,8 +1,8 @@
-.PHONY: all patch-kernel enable-docker allow-sysvipc default revert
+.PHONY: all patch-kernel enable-docker allow-sysvipc default revert default-settings
 
 # Usage: make ANDROID_VENDOR=... KERNEL_DIR=...
 
-default: revert patch-kernel allow-sysvipc enable-docker
+default: revert patch-kernel allow-sysvipc enable-docker default-settings
 
 patch-kernel:
 	@echo "Patching kernel..."
@@ -40,3 +40,12 @@ revert:
 		07c465641ad78e1afa20665bb23f2ae26a0ff6a4 </dev/null
 		
 
+default-settings:
+	# Disable Lift to check phone
+	scripts/edit-setting-entry.sh bool config_dozePickupGestureEnabled  false $(ANDROID_BUILD_TOP)/frameworks/base/core/res/res/values/config.xml
+	# Be quiet by default
+	scripts/edit-setting-entry.sh bool def_charging_vibration_enabled   false $(ANDROID_BUILD_TOP)/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
+	scripts/edit-setting-entry.sh bool def_charging_sounds_enabled      false $(ANDROID_BUILD_TOP)/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
+	scripts/edit-setting-entry.sh bool def_sound_effects_enabled        false $(ANDROID_BUILD_TOP)/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
+	scripts/edit-setting-entry.sh bool def_dtmf_tones_enabled           false $(ANDROID_BUILD_TOP)/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
+	scripts/edit-setting-entry.sh integer def_lockscreen_sounds_enabled     0 $(ANDROID_BUILD_TOP)/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
