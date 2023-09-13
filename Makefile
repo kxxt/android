@@ -1,4 +1,4 @@
-.PHONY: all patch-kernel enable-docker allow-sysvipc default revert default-settings
+.PHONY: all patch-kernel enable-docker allow-sysvipc default revert default-settings fix-adb-sync
 
 # Usage: make ANDROID_VENDOR=... KERNEL_DIR=...
 
@@ -15,6 +15,10 @@ allow-sysvipc:
 enable-docker:
 	@echo "Enabling docker..."
 	patch -Np1 -i $(realpath optional-patches/docker/$(ANDROID_VENDOR)-$(LINEAGE_BUILD).patch) -d $(ANDROID_BUILD_TOP)/kernel/$(ANDROID_VENDOR)/$(KERNEL_DIR)
+
+fix-adb-sync:
+	@echo "Fixing adb sync..."
+	patch -Np1 -i $(realpath optional-patches/sm8250-fix-adb-sync.patch) -d $(ANDROID_BUILD_TOP)/device/xiaomi/sm8250-common
 
 sign-build:
 	@echo "Placeholder"
