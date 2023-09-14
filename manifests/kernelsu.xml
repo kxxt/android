@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+    <project name="kxxt/external_kernelsu" path="external/kernelsu" remote="github" revision="37aff625037ac116d434e3fa313c34a51abfe328"/>
+</manifest>
