@@ -1,12 +1,19 @@
-.PHONY: all patch-kernel enable-docker allow-sysvipc default revert default-settings fix-adb-sync
+.PHONY: all patch-kernel enable-docker allow-sysvipc default revert default-settings fix-adb-sync kernelsu
 
 # Usage: make ANDROID_VENDOR=... KERNEL_DIR=...
 
-default: revert patch-kernel allow-sysvipc enable-docker default-settings
+ANDROID_VENDOR := xiaomi
+KERNEL_DIR := sm8250
+KERNEL_ABS_DIR := $(ANDROID_BUILD_TOP)/kernel/$(ANDROID_VENDOR)/$(KERNEL_DIR)
+KERNEL_DRIVER_DIR := drivers
+KERNEL_DRIVER_ABS_DIR := $(KERNEL_ABS_DIR)/$(KERNEL_DRIVER_DIR)
+DEVICE_CODENAME := lmi
+
+default: revert patch-kernel allow-sysvipc enable-docker default-settings fix-adb-sync kernelsu
 
 patch-kernel:
 	@echo "Patching kernel..."
-	patch -Np1 -i $(realpath kernel-patches/termux-kernel-docker.patch) -d $(ANDROID_BUILD_TOP)/kernel/$(ANDROID_VENDOR)/$(KERNEL_DIR)
+	patch -Np1 -i $(realpath kernel-patches/termux-kernel-docker.patch) -d $(KERNEL_ABS_DIR)
 
 allow-sysvipc:
 	@echo "Allow SYSVIPC"
@@ -14,7 +21,7 @@ allow-sysvipc:
 
 enable-docker:
 	@echo "Enabling docker..."
-	patch -Np1 -i $(realpath optional-patches/docker/$(ANDROID_VENDOR)-$(LINEAGE_BUILD).patch) -d $(ANDROID_BUILD_TOP)/kernel/$(ANDROID_VENDOR)/$(KERNEL_DIR)
+	patch -Np1 -i $(realpath optional-patches/docker/$(ANDROID_VENDOR)-$(LINEAGE_BUILD).patch) -d $(KERNEL_ABS_DIR)
 
 fix-adb-sync:
 	@echo "Fixing adb sync..."
@@ -53,3 +60,16 @@ default-settings:
 	scripts/edit-setting-entry.sh bool def_sound_effects_enabled        false $(ANDROID_BUILD_TOP)/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
 	scripts/edit-setting-entry.sh bool def_dtmf_tones_enabled           false $(ANDROID_BUILD_TOP)/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
 	scripts/edit-setting-entry.sh integer def_lockscreen_sounds_enabled     0 $(ANDROID_BUILD_TOP)/frameworks/base/packages/SettingsProvider/res/values/defaults.xml
+
+kernelsu:
+	if [ ! -d $(ANDROID_BUILD_TOP)/external/kernelsu ]; then \
+		echo "Please checkout kernelsu to $(ANDROID_BUILD_TOP)/external/kernelsu"; \
+		exit 1; \
+	fi
+	if [ ! -L $(KERNEL_DRIVER_DIR)/kernelsu ]; then \
+		echo "Linking kernelsu..."; \
+		ln -s $(ANDROID_BUILD_TOP)/external/kernelsu/kernel $(KERNEL_DRIVER_ABS_DIR)/kernelsu; \
+	fi
+	grep -q "kernelsu" $(KERNEL_DRIVER_ABS_DIR)/Makefile || printf "obj-\$$(CONFIG_KSU) += kernelsu/\n" >> $(KERNEL_DRIVER_ABS_DIR)/Makefile
+	grep -q "kernelsu" $(KERNEL_DRIVER_ABS_DIR)/Kconfig  || printf "source \"$(KERNEL_DRIVER_DIR)/kernelsu/Kconfig\"\n" >> $(KERNEL_DRIVER_ABS_DIR)/Kconfig
+	# echo -e "\nCONFIG_KPROBES=y\nCONFIG_HAVE_KPROBES=y\nCONFIG_KPROBE_EVENTS=y\n" >> $(KERNEL_ABS_DIR)/arch/arm64/configs/vendor/$(ANDROID_VENDOR)/$(DEVICE_CODENAME).config
