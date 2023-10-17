@@ -66,7 +66,7 @@ kernelsu:
 		echo "Please checkout kernelsu to $(ANDROID_BUILD_TOP)/external/kernelsu"; \
 		exit 1; \
 	fi
-	if [ ! -L $(KERNEL_DRIVER_DIR)/kernelsu ]; then \
+	if [ ! -L $(KERNEL_DRIVER_ABS_DIR)/kernelsu ]; then \
 		echo "Linking kernelsu..."; \
 		ln -s $(ANDROID_BUILD_TOP)/external/kernelsu/kernel $(KERNEL_DRIVER_ABS_DIR)/kernelsu; \
 	fi
